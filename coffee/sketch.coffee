@@ -19,6 +19,11 @@ class Player
 		text @history.length,width*(@middle-0.10),200
 		text @tid/1000,width*(@middle+0.10),200
 
+		@help()
+
+	help : ->
+		text @keys[0]
+
 	operate : (newValue) ->
 		@history.push @start
 		@start = newValue
