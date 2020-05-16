@@ -14,32 +14,21 @@ class Player
 
 	draw : ->
 		fill @bg
-		textSize 30
+		textSize 0.05*height
 		textAlign CENTER,CENTER
-		rect @left * width,0,width / 2,height
+		rect @left * width,0,width * (@right-@left),height
 		fc 0
-		x1 = @middle - 0.1
-		x2 = @middle + 0.1
+		x1 = @middle - 0.05
+		x2 = @middle + 0.05
 		y1 = 0.2
 		y2 = 0.4
-		text @start,         width * x1, y1 * height 
-		text @target,        width * x2, y1 * height
+		text @start,         width * @middle, y1 * height 
+		# text @target,        width * x2, y1 * height
 		text @history.length,width * x1, y2 * height
 		text @tid/1000,      width * x2, y2 * height
 		@help()
 
-	help : ->
-		textSize 0.05*height
-		lst = (key.replace("Arrow","") for key in @keys)
-		x1 = @middle - 0.15
-		x2 = @middle 
-		x3 = @middle + 0.15
-		y1 = 0.6
-		y2 = 0.8
-		text "Undo: " + lst[0], width * x2, y1 * height
-		text "+2: "   + lst[1], width * x1, y2 * height
-		text "*2: "   + lst[2], width * x2, y2 * height
-		text "/2: "   + lst[3], width * x3, y2 * height
+	help : -> hlp @keys, @middle
 
 	operate : (newValue) ->
 		@history.push @start
@@ -47,16 +36,34 @@ class Player
 		if @start == @target then @stoppTid = new Date()
 
 	click : (key) ->
+		keys = _.clone @keys
+		if keys[0] == "🡑" then keys[0] = "ArrowUp" # 🡑 🡐 🡓 🡒
+		if keys[1] == "🡐" then keys[1] = "ArrowLeft" 
+		if keys[2] == "🡓" then keys[2] = "ArrowDown" 
+		if keys[3] == "🡒" then keys[3] = "ArrowRight" 
 		if @start == @target then return
+		
 		key = key.toUpperCase()
-		if key == @keys[0].toUpperCase() and @history.length > 0 then @start = @history.pop()
-		if key == @keys[1].toUpperCase() then	@operate @start + 2
-		if key == @keys[2].toUpperCase() then	@operate @start * 2
-		if key == @keys[3].toUpperCase() and @start % 2 == 0 then @operate @start / 2
+		if key == keys[0].toUpperCase() and @history.length > 0 then @start = @history.pop()
+		if key == keys[1].toUpperCase() then	@operate @start + 2
+		if key == keys[2].toUpperCase() then	@operate @start * 2
+		if key == keys[3].toUpperCase() and @start % 2 == 0 then @operate @start / 2
 		if @start == @target
 			@stoppTid = new Date()
 			@tid = @stoppTid - @startTid + 10000 * @history.length
 
+hlp = (keys, middle)->
+	textSize 0.05*height
+	lst = keys # (key.replace("Arrow","") for key in @keys)
+	x1 = middle - 0.05
+	x2 = middle 
+	x3 = middle + 0.05
+	y1 = 0.6
+	y2 = 0.8
+	text lst[0], width * x2, y1 * height
+	text lst[1], width * x1, y2 * height
+	text lst[2], width * x2, y2 * height
+	text lst[3], width * x3, y2 * height
 
 createTarget = (level, start) ->
 
@@ -79,16 +86,28 @@ createTarget = (level, start) ->
 	_.sample a
 
 setup = ->
-	createCanvas windowWidth,windowHeight
+	createCanvas windowWidth,windowHeight 
 	startTid = new Date()
 	level = 3
 	start = _.random 1,20
 	target = createTarget level, start
-	players.push new Player start,target,0.00,0.50, "#ff0", "W A S D".split ' '
-	players.push new Player start,target,0.50,1.00, "#f00", "ArrowUp ArrowLeft ArrowDown ArrowRight".split ' '
+	players.push new Player start,target,0.00,0.20, "#ff0", "W A S D".split ' '
+	players.push new Player start,target,0.20,0.40, "#f00", "T F G H".split ' '	
+	players.push new Player start,target,0.60,0.80, "#0f0", "I J K L".split ' '
+	players.push new Player start,target,0.80,1.00, "#0ff", "🡑 🡐 🡓 🡒".split ' '
 
-draw = -> player.draw() for player in players
-keyPressed =()-> player.click key for player in players
+draw = -> 
+	bg 1
+	for player in players
+		player.draw() 
+	sc()
+	hlp "Undo +2 *2 /2".split(' '), 0.5  # ["Undo", '+2',,,]
+	text players[0].target,        width * 0.5, 0.2*height
+
+
+	
+
+keyPressed =()-> player.click key for player in players		
 
 # + * /
 # 7    Start
