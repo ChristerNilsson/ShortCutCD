@@ -57,14 +57,23 @@ class Player
 			@stoppTid = new Date()
 			@tid = @stoppTid - @startTid + 10000 * @history.length
 
+
 createTarget = (level, start) ->
+
+	op = (nextValue) ->
+		if nextValue not in visited 
+			b.push nextValue
+			visited.push nextValue
+
 	a = [start]
+	visited = [start]
 	for i in range level
 		b = []
 		for nr in a
-			b.push nr + 2
-			b.push nr * 2
-			if nr%2 == 0 then b.push nr/2
+			op nr+2
+			op nr*2
+			if nr%2==0 then op nr/2	
+
 		b = _.uniq b
 		[a,b] = [b,a]
 	_.sample a
@@ -82,7 +91,9 @@ draw = -> player.draw() for player in players
 keyPressed =()-> player.click key for player in players
 
 # + * /
-# 3    Start
-# 5    6                                1 operation
-# 7    10         8        12 (3)       2 operationer
-# 9 14 12 20 (5) (10) 16 4 (14) 24 (6)  3 operationer
+# 7    Start
+# 9    14                                1 operation
+# 11    18         16        28 (7)      2 operationer
+# 13 22 20 36 (9) (18) 32 8 30 56 (14)   3 operationer
+
+
