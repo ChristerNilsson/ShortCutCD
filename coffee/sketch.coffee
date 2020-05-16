@@ -24,7 +24,7 @@ class Player
 		y2 = 0.4
 		text @start,         width * @middle, y1 * height 
 		# text @target,        width * x2, y1 * height
-		text @history.length,width * x1, y2 * height
+		text level - @history.length, width * x1, y2 * height
 		text @tid/1000,      width * x2, y2 * height
 		@help()
 
