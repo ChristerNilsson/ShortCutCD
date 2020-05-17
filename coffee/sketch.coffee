@@ -1,6 +1,14 @@
 ROWS = 3
 COLS = 4
-CHOICES = 'undo +2 *2 /2'.split ' '
+CHOICES = [] 
+
+ADD = 2
+MUL = 2
+DIV = 2
+MAX = 20
+COST = 10
+PLAYERS = 12
+
 level = 1
 players = []
 
@@ -55,13 +63,13 @@ class Player
 		if key == keys[0].toUpperCase() then @index = (@index + 1) % CHOICES.length
 		if key == keys[1].toUpperCase() 
 			if @index == 0 and @history.length > 0 then @start = @history.pop()
-			if @index == 1 then	@operate @start + 2
-			if @index == 2 then	@operate @start * 2
-			if @index == 3 and @start % 2 == 0 then  @operate @start / 2
+			if @index == 1 then	@operate @start + ADD
+			if @index == 2 then	@operate @start * MUL
+			if @index == 3 and @start % DIV == 0 then @operate @start / DIV
 
 		if @start == @target
 			@stoppTid = new Date()
-			@tid = myRound (@stoppTid - @startTid)/1000 + 10 * @history.length, 3
+			@tid = myRound (@stoppTid - @startTid)/1000 + COST * @history.length, 3
 
 myRound = (x,n) -> round(x*10**n)/10**n
 
@@ -76,9 +84,9 @@ createTarget = (level, start) ->
 	for i in range level
 		b = []
 		for nr in a
-			op nr,nr + 2
-			op nr,nr * 2
-			if nr % 2 == 0 then op nr,nr / 2
+			op nr,nr + ADD 
+			op nr,nr * MUL
+			if nr % DIV == 0 then op nr,nr / DIV
 		a = _.uniq b
 	target = _.sample a
 	result = []
@@ -92,17 +100,27 @@ newGame = (delta=0) ->
 	level += delta
 	if level < 1 then level = 1
 	startTid = new Date()
-	start = _.random 1,20
+	start = _.random 1,MAX
 	solution = createTarget level, start
 	target = _.last solution
 	keys = 'QWERTYUIASDFGHJKZXCVBNM,'
-	for row in range ROWS
-		for col in range COLS
-			index = COLS*row+col
-			players.push new Player start,target,row,col, keys[2*index] + keys[2*index+1]
+	for i in range PLAYERS
+		row = floor i / 4
+		col = i % 4
+		players.push new Player start,target,row,col, keys[2*i] + keys[2*i+1]
 
 setup = ->
 	createCanvas windowWidth,windowHeight
+	params = getParameters()
+	console.log params
+	ADD = params.ADD || 2
+	MUL = params.MUL || 2
+	DIV = params.DIV || 2
+	MAX = params.MAX || 20
+	COST = params.COST || 10
+	PLAYERS = params.PLAYERS || 12
+
+	CHOICES = "undo +#{ADD} *#{MUL} /#{DIV}".split ' '
 	newGame()
 
 draw = ->
@@ -116,9 +134,3 @@ keyPressed = ->
 	if key == "ArrowUp" then newGame 1
 	else if key == "ArrowDown" then newGame -1
 	else player.click key for player in players
-
-# + * /
-# 7    Start {7:0}
-# 9    14                                1 operation   {7:0, 9:7, 14:7}
-# 11    18         16        28 (7)      2 operationer {7:0, 9:7, 14:7, 11:9, 18:9, 16:14, 28:14}
-# 13 22 20 36 (9) (18) 32 8 30 56 (14)   3 operationer {7:0, 9:7, 14:7, 11:9, 18:9, 16:14, 28:14, 13:11, 22:11, 20:18, 36:16, 32:16, 8:16, 30:28, 56:28}
