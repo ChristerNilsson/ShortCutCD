@@ -1,33 +1,47 @@
-# W    A    S    D
-# up   left down right
-# undo +2   *2   /2
-
+ROWS = 3
+COLS = 4
+CHOICES = 'undo +2 *2 /2'.split ' '
 level = 1
 players = []
 
 class Player
-	constructor : (@start, @target, @left, @right, @bg, @keys) ->
+	constructor : (@start, @target, @row, @col, @keys) ->
+		@bg = if (@row+@col) % 2 == 0 then "#ff0" else "#f00"
+
+		@w = width * 0.25
+		@left = @w * @col 
+		@xmiddle = @left + @w / 2
+
+		@h = height * 0.25
+		@up = @h * @row
+		@ymiddle = @up + @h / 2
+
 		@history = []
 		@tid = 0
-		@middle = (@left + @right) / 2
 		@startTid = new Date()
 
-	draw : ->
-		fill @bg
-		textSize 0.05*height
-		textAlign CENTER,CENTER
-		rect @left * width,0,width * (@right-@left),height
-		fc 0
-		x1 = @middle - 0.05
-		x2 = @middle + 0.05
-		y1 = 0.2
-		y2 = 0.4
-		text @start,                  width * @middle, y1 * height
-		text level - @history.length, width * x1, y2 * height
-		text @tid/1000,               width * x2, y2 * height
-		@help()
+		@index = 0
 
-	help : -> hlp @keys, @middle
+	draw : ->
+		if @start == @target
+			fill "#0f0"
+			textSize 0.05*height
+			textAlign CENTER,CENTER
+			sc 0
+			rect @left,@up,@w,@h
+			fc 0
+			text @keys, @xmiddle, @ymiddle
+			text @tid,  @xmiddle, @ymiddle+50
+		else
+			fill @bg
+			textSize 0.05*height
+			textAlign CENTER,CENTER
+			sc 0
+			rect @left,@up,@w,@h
+			fc 0
+			text @start,           @xmiddle, @ymiddle-50
+			text @keys,            @xmiddle, @ymiddle
+			text CHOICES[@index], @xmiddle, @ymiddle+50
 
 	operate : (newValue) ->
 		@history.push @start
@@ -35,72 +49,76 @@ class Player
 		if @start == @target then @stoppTid = new Date()
 
 	click : (key) ->
+		if @start == @target then return		
 		keys = _.clone @keys
-		if keys[0] == "🡑" then keys[0] = "ArrowUp" # 🡑 🡐 🡓 🡒
-		if keys[1] == "🡐" then keys[1] = "ArrowLeft"
-		if keys[2] == "🡓" then keys[2] = "ArrowDown"
-		if keys[3] == "🡒" then keys[3] = "ArrowRight"
-		if @start == @target then return
-		
 		key = key.toUpperCase()
-		if key == keys[0].toUpperCase() and @history.length > 0 then @start = @history.pop()
-		if key == keys[1].toUpperCase() then	@operate @start + 2
-		if key == keys[2].toUpperCase() then	@operate @start * 2
-		if key == keys[3].toUpperCase() and @start % 2 == 0 then @operate @start / 2
+		if key == keys[0].toUpperCase() then @index = (@index + 1) % CHOICES.length
+		if key == keys[1].toUpperCase() 
+			if @index == 0 and @history.length > 0 then @start = @history.pop()
+			if @index == 1 then	@operate @start + 2
+			if @index == 2 then	@operate @start * 2
+			if @index == 3 and @start % 2 == 0 then  @operate @start / 2
+
 		if @start == @target
 			@stoppTid = new Date()
-			@tid = @stoppTid - @startTid + 10000 * @history.length
+			@tid = myRound (@stoppTid - @startTid)/1000 + 10 * @history.length, 3
 
-hlp = (keys, middle)->
-	textSize 0.05*height
-	x1 = middle - 0.05
-	x2 = middle
-	x3 = middle + 0.05
-	y1 = 0.6
-	y2 = 0.8
-	text keys[0], width * x2, y1 * height
-	text keys[1], width * x1, y2 * height
-	text keys[2], width * x2, y2 * height
-	text keys[3], width * x3, y2 * height
+myRound = (x,n) -> round(x*10**n)/10**n
 
 createTarget = (level, start) ->
-	op = (nr) -> if nr not in visited then b.push nr
+	op = (from,nr) ->
+		if nr not of comeFrom
+			b.push nr
+			comeFrom[nr] = from
 	a = [start]
-	visited = [start]
+	comeFrom = {}
+	comeFrom[start] = 0
 	for i in range level
 		b = []
 		for nr in a
-			op nr + 2
-			op nr * 2
-			if nr % 2 == 0 then op nr / 2
-		b = _.uniq b
-		visited = visited.concat b
-		[a,b] = [b,a]
-	_.sample a
+			op nr,nr + 2
+			op nr,nr * 2
+			if nr % 2 == 0 then op nr,nr / 2
+		a = _.uniq b
+	target = _.sample a
+	result = []
+	while target != 0
+		result.unshift target
+		target = comeFrom[target]
+	result
+
+newGame = (delta=0) ->
+	players = []
+	level += delta
+	if level < 1 then level = 1
+	startTid = new Date()
+	start = _.random 1,20
+	solution = createTarget level, start
+	target = _.last solution
+	keys = 'QWERTYUIASDFGHJKZXCVBNM,'
+	for row in range ROWS
+		for col in range COLS
+			index = COLS*row+col
+			players.push new Player start,target,row,col, keys[2*index] + keys[2*index+1]
 
 setup = ->
 	createCanvas windowWidth,windowHeight
-	startTid = new Date()
-	level = 3
-	start = _.random 1,20
-	target = createTarget level, start
-	players.push new Player start,target,0.00,0.20, "#ff0", "W A S D".split ' '
-	players.push new Player start,target,0.20,0.40, "#f00", "T F G H".split ' '
-	players.push new Player start,target,0.60,0.80, "#0f0", "I J K L".split ' '
-	players.push new Player start,target,0.80,1.00, "#0ff", "🡑 🡐 🡓 🡒".split ' '
+	newGame()
 
 draw = ->
 	bg 1
-	for player in players
-		player.draw()
+	player.draw() for player in players
 	sc()
-	hlp "Undo +2 *2 /2".split(' '), 0.5  # ["Undo", '+2',,,]
-	text players[0].target,        width * 0.5, 0.2*height
+	text players[0].target, width * 0.5, 0.8*height
+	text "level: #{level}", width * 0.5, 0.9*height
 
-keyPressed = -> player.click key for player in players
+keyPressed = -> 
+	if key == "ArrowUp" then newGame 1
+	else if key == "ArrowDown" then newGame -1
+	else player.click key for player in players
 
 # + * /
-# 7    Start
-# 9    14                                1 operation
-# 11    18         16        28 (7)      2 operationer
-# 13 22 20 36 (9) (18) 32 8 30 56 (14)   3 operationer
+# 7    Start {7:0}
+# 9    14                                1 operation   {7:0, 9:7, 14:7}
+# 11    18         16        28 (7)      2 operationer {7:0, 9:7, 14:7, 11:9, 18:9, 16:14, 28:14}
+# 13 22 20 36 (9) (18) 32 8 30 56 (14)   3 operationer {7:0, 9:7, 14:7, 11:9, 18:9, 16:14, 28:14, 13:11, 22:11, 20:18, 36:16, 32:16, 8:16, 30:28, 56:28}

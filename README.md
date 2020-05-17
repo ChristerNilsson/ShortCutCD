@@ -1,13 +1,12 @@
 # Shortcut
 
-[Try it!](https://christernilsson.github.io/ShortcutCD/index.html)
-
-- A simple mathematical two person game.
-- The object is to make the left number equal the right.
+- A simple mathematical twelve person game.
+- The object is to make your number equal to the target below.
 - Every operation costs ten seconds.
 
 ## Usage
 
-- Use the link above.
-- Use WASD and arrow keys.
-
+- Left letter selects
+- Right letter executes
+- Up Arrow makes it harder
+- Down Arrow makes it easier
