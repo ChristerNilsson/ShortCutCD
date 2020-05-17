@@ -48,8 +48,8 @@ class Player
 			sc 0
 			rect @left,@up,@w,@h
 			fc 0
-			text @start,           @xmiddle, @ymiddle-50
-			text @keys,            @xmiddle, @ymiddle
+			text @start,          @xmiddle, @ymiddle-50
+			text @keys,           @xmiddle, @ymiddle
 			text CHOICES[@index], @xmiddle, @ymiddle+50
 
 	operate : (newValue) ->
