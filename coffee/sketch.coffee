@@ -11,9 +11,10 @@ PLAYERS = 12
 
 level = 1
 players = []
+target = 0
 
 class Player
-	constructor : (@start, @target, @row, @col, @keys) ->
+	constructor : (@start, @row, @col, @keys) ->
 		@bg = if (@row+@col) % 2 == 0 then "#ff0" else "#f00"
 
 		@w = width * 0.25
@@ -31,7 +32,7 @@ class Player
 		@index = 0
 
 	draw : ->
-		if @start == @target
+		if @start == target
 			fill "#0f0"
 			textSize 0.05*height
 			textAlign CENTER,CENTER
@@ -54,10 +55,10 @@ class Player
 	operate : (newValue) ->
 		@history.push @start
 		@start = newValue
-		if @start == @target then @stoppTid = new Date()
+		if @start == target then @stoppTid = new Date()
 
 	click : (key) ->
-		if @start == @target then return		
+		if @start == target then return		
 		keys = _.clone @keys
 		key = key.toUpperCase()
 		if key == keys[0].toUpperCase() then @index = (@index + 1) % CHOICES.length
@@ -67,7 +68,7 @@ class Player
 			if @index == 2 then	@operate @start * MUL
 			if @index == 3 and @start % DIV == 0 then @operate @start / DIV
 
-		if @start == @target
+		if @start == target
 			@stoppTid = new Date()
 			@tid = myRound (@stoppTid - @startTid)/1000 + COST * @history.length, 3
 
@@ -107,19 +108,17 @@ newGame = (delta=0) ->
 	for i in range PLAYERS
 		row = floor i / 4
 		col = i % 4
-		players.push new Player start,target,row,col, keys[2*i] + keys[2*i+1]
+		players.push new Player start,row,col, keys[2*i] + keys[2*i+1]
 
 setup = ->
 	createCanvas windowWidth,windowHeight
-	params = getParameters()
-	console.log params
-	ADD = params.ADD || 2
-	MUL = params.MUL || 2
-	DIV = params.DIV || 2
-	MAX = params.MAX || 20
-	COST = params.COST || 10
-	PLAYERS = params.PLAYERS || 12
-
+	params = _.extend {ADD:2, MUL:2, DIV:2, MAX:2, COST:10, PLAYERS:12}, getParameters()
+	ADD = int params.ADD
+	MUL = int params.MUL
+	DIV = int params.DIV
+	MAX = int params.MAX
+	COST = int params.COST
+	PLAYERS = int params.PLAYERS
 	CHOICES = "undo +#{ADD} *#{MUL} /#{DIV}".split ' '
 	newGame()
 
@@ -127,7 +126,7 @@ draw = ->
 	bg 1
 	player.draw() for player in players
 	sc()
-	text players[0].target, width * 0.5, 0.8*height
+	text target, width * 0.5, 0.8*height
 	text "level: #{level}", width * 0.5, 0.9*height
 
 keyPressed = -> 
