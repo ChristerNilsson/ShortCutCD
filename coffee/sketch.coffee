@@ -67,8 +67,8 @@ class Player
 		if key == keys[0].toUpperCase() then @index = (@index + 1) % CHOICES.length
 		if key == keys[1].toUpperCase() 
 			if @index == 0 and @history.length > 0 then @start = @history.pop()
-			if @index == 1 then	@operate @start + ADD
-			if @index == 2 then	@operate @start * MUL
+			if @index == 1 then	@operate @start * MUL
+			if @index == 2 then	@operate @start + ADD
 			if @index == 3 and @start % DIV == 0 then @operate @start / DIV
 
 		if @start == target
@@ -122,7 +122,7 @@ setup = ->
 	MAX = int params.MAX
 	COST = int params.COST
 	PLAYERS = int params.PLAYERS
-	CHOICES = "undo +#{ADD} *#{MUL} /#{DIV}".split ' '
+	CHOICES = "undo *#{MUL} +#{ADD} /#{DIV}".split ' '
 	newGame()
 
 draw = ->
