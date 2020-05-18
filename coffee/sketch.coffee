@@ -12,6 +12,7 @@ PLAYERS = 12
 level = 1
 players = []
 target = 0
+solution = null
 
 class Player
 	constructor : (@start, @row, @col, @keys) ->
@@ -39,8 +40,9 @@ class Player
 			sc 0
 			rect @left,@up,@w,@h
 			fc 0
+			sc()
 			text @keys, @xmiddle, @ymiddle
-			text @tid,  @xmiddle, @ymiddle+50
+			text @tid,  @xmiddle, @ymiddle+0.25*@h
 		else
 			fill @bg
 			textSize 0.05*height
@@ -48,9 +50,10 @@ class Player
 			sc 0
 			rect @left,@up,@w,@h
 			fc 0
-			text @start,          @xmiddle, @ymiddle-50
+			sc()
+			text @start,          @xmiddle, @ymiddle-0.25*@h
 			text @keys,           @xmiddle, @ymiddle
-			text CHOICES[@index], @xmiddle, @ymiddle+50
+			text CHOICES[@index], @xmiddle, @ymiddle+0.25*@h
 
 	operate : (newValue) ->
 		@history.push @start
@@ -112,7 +115,7 @@ newGame = (delta=0) ->
 
 setup = ->
 	createCanvas windowWidth,windowHeight
-	params = _.extend {ADD:2, MUL:2, DIV:2, MAX:2, COST:10, PLAYERS:12}, getParameters()
+	params = _.extend {ADD:2, MUL:2, DIV:2, MAX:20, COST:10, PLAYERS:12}, getParameters()
 	ADD = int params.ADD
 	MUL = int params.MUL
 	DIV = int params.DIV
@@ -126,10 +129,11 @@ draw = ->
 	bg 1
 	player.draw() for player in players
 	sc()
-	text target, width * 0.5, 0.8*height
-	text "level: #{level}", width * 0.5, 0.9*height
+	text target, width * 0.5, 0.75*height + 0.33*players[0].h
+	text "level: #{level}", width * 0.5, 0.75*height + 0.67*players[0].h
 
 keyPressed = -> 
-	if key == "ArrowUp" then newGame 1
+	if key == 'Enter' then console.log solution
+	else if key == "ArrowUp" then newGame 1
 	else if key == "ArrowDown" then newGame -1
 	else player.click key for player in players
