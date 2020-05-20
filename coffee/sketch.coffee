@@ -90,13 +90,14 @@ createTarget = (level, start) ->
 		for nr in a
 			op nr,nr + ADD 
 			op nr,nr * MUL
-			if nr % DIV == 0 then op nr,nr / DIV
+			if nr % DIV == 0 then op nr,nr / DIV 
 		a = _.uniq b
 	target = _.sample a
 	result = []
 	while target != 0
 		result.unshift target
 		target = comeFrom[target]
+	console.log comeFrom
 	result
 
 newGame = (delta=0) ->
@@ -108,6 +109,8 @@ newGame = (delta=0) ->
 	solution = createTarget level, start
 	target = _.last solution
 	keys = 'QWERTYUIASDFGHJKZXCVBNM,'
+	if PLAYERS == 2 then keys = 'QWIO'
+	if PLAYERS == 3 then keys = 'QWTYOP'
 	for i in range PLAYERS
 		row = floor i / 4
 		col = i % 4
