@@ -14,6 +14,16 @@ players = []
 target = 0
 solution = null
 
+d = new Date()
+seed = 60*d.getHours() + d.getMinutes()
+
+myRandom = ->
+	x = 10000 * Math.sin seed++
+	x - Math.floor x
+
+myRandint = (a,b) ->
+	int a + (b-a) * myRandom()
+
 class Player
 	constructor : (@start, @row, @col, @keys) ->
 		@bg = if (@row+@col) % 2 == 0 then "#ff0" else "#f00"
@@ -92,7 +102,7 @@ createTarget = (level, start) ->
 			op nr,nr * MUL
 			if nr % DIV == 0 then op nr,nr / DIV 
 		a = _.uniq b
-	target = _.sample a
+	target = a[myRandint 0,a.length]
 	result = []
 	while target != 0
 		result.unshift target
@@ -105,7 +115,7 @@ newGame = (delta=0) ->
 	level += delta
 	if level < 1 then level = 1
 	startTid = new Date()
-	start = _.random 1,MAX
+	start = myRandint 1,MAX
 	solution = createTarget level, start
 	target = _.last solution
 	keys = 'QWERTYUIASDFGHJKZXCVBNM,'
@@ -134,6 +144,7 @@ draw = ->
 	sc()
 	text target, width * 0.5, 0.75*height + 0.33*players[0].h
 	text "level: #{level}", width * 0.5, 0.75*height + 0.67*players[0].h
+	text "seed: #{seed}", width * 0.25, 0.75*height + 0.67*players[0].h
 
 keyPressed = -> 
 	if key == 'Enter' then console.log solution
