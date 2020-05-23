@@ -4,6 +4,7 @@ level = 0
 players = []
 buttons = []
 
+# to make this multiplayer with Browser Preview
 d = new Date()
 seed = 60*d.getHours() + d.getMinutes()
 fract = (x) -> x - Math.floor x
@@ -39,14 +40,15 @@ class Player
 
 	draw : ->
 		if @start==@target then fill "#0f0" else fill @bg
-		textSize 0.05*height
+		textSize 0.04*height
 		textAlign CENTER,CENTER
 		rect @left * width,0,width * (@right-@left),height
 		fc 0
-		text @name,                   width * @middle, 0.1 * height
-		text @start,                  width * @middle, 0.2 * height
-		text level - @history.length, width * @middle, 0.3 * height
-		text @tid/1000,               width * @middle, 0.4 * height
+		text @name,                   width * @middle, 0.05 * height
+		text @start,                  width * @middle, 0.15 * height
+		text @target,                 width * @middle, 0.20 * height
+		text level - @history.length, width * @middle, 0.30 * height
+		text @tid/1000,               width * @middle, 0.40 * height
 
 	operate : (newValue) ->
 		@count++
@@ -89,9 +91,6 @@ draw = ->
 		player.draw()
 	for button in buttons
 		button.draw()
-	sc()
-	fc 0
-	text players[0].target, 0.5 * width, 0.2 * height
 
 newGame = (delta) ->
 	level += delta
@@ -100,15 +99,21 @@ newGame = (delta) ->
 	start = myRandint 1,20
 	target = createTarget level, start
 	players = []
-	players.push new Player start,target,0.00,0.20, "#ff0", 'Alex'
-	players.push new Player start,target,0.20,0.40, "#f00", 'Lowe'
-	players.push new Player start,target,0.60,0.80, "#f0f", 'Mark'
-	players.push new Player start,target,0.80,1.00, "#0ff", 'Tim'
+	players.push new Player start,target,0.00,0.10, "#ff0", 'Alex'
+	players.push new Player start,target,0.10,0.20, "#f00", 'Lowe'
+	players.push new Player start,target,0.20,0.30, "#f0f", 'Mark'
+	players.push new Player start,target,0.30,0.40, "#0ff", 'Tim'
+	players.push new Player start,target,0.40,0.50, "#ff0", 'Christer'
+	players.push new Player start,target,0.50,0.60, "#f00", 'F'
+	players.push new Player start,target,0.60,0.70, "#f0f", 'G'
+	players.push new Player start,target,0.70,0.80, "#0ff", 'H'
+	players.push new Player start,target,0.80,0.90, "#f0f", 'I'
+	players.push new Player start,target,0.90,1.00, "#0ff", 'J'
 
 keyPressed = -> 
 	if key == ' ' then newGame 0 
-	if key in 'uU' then newGame 1
-	if key in 'dD' then newGame -1
+	if key in 'uU+' then newGame 1
+	if key in 'dD-' then newGame -1
 
 mousePressed = ->
 	for button in buttons
