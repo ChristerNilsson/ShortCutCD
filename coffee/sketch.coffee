@@ -1,3 +1,4 @@
+PLAYERS = 'Alex Lowe Mark Tim Christer F G H I J'.split ' '
 KEYS = "undo +2 *2 /2".split ' '
 
 level = 0
@@ -99,16 +100,10 @@ newGame = (delta) ->
 	start = myRandint 1,20
 	target = createTarget level, start
 	players = []
-	players.push new Player start,target,0.00,0.10, "#ff0", 'Alex'
-	players.push new Player start,target,0.10,0.20, "#f00", 'Lowe'
-	players.push new Player start,target,0.20,0.30, "#f0f", 'Mark'
-	players.push new Player start,target,0.30,0.40, "#0ff", 'Tim'
-	players.push new Player start,target,0.40,0.50, "#ff0", 'Christer'
-	players.push new Player start,target,0.50,0.60, "#f00", 'F'
-	players.push new Player start,target,0.60,0.70, "#f0f", 'G'
-	players.push new Player start,target,0.70,0.80, "#0ff", 'H'
-	players.push new Player start,target,0.80,0.90, "#f0f", 'I'
-	players.push new Player start,target,0.90,1.00, "#0ff", 'J'
+	for name,i in PLAYERS
+		console.log i,name
+		if i%2 == 0 then c = "#ff0" else c = "#f00"
+		players.push new Player start,target,i*0.1,(i+1)*0.1, c, name
 
 keyPressed = -> 
 	if key == ' ' then newGame 0 
