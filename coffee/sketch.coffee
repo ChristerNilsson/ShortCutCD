@@ -1,153 +1,115 @@
-ROWS = 3
-COLS = 4
-CHOICES = [] 
+KEYS = "undo +2 *2 /2".split ' '
 
-ADD = 2
-MUL = 2
-DIV = 2
-MAX = 20
-COST = 10
-PLAYERS = 12
-
-level = 1
+level = 0
 players = []
-target = 0
-solution = null
+buttons = []
 
 d = new Date()
 seed = 60*d.getHours() + d.getMinutes()
+fract = (x) -> x - Math.floor x
+myRandom = -> fract 10000 * Math.sin seed++
+myRandint = (a,b) -> int a + (b-a) * myRandom()
 
-myRandom = ->
-	x = 10000 * Math.sin seed++
-	x - Math.floor x
-
-myRandint = (a,b) ->
-	int a + (b-a) * myRandom()
+class Button
+	constructor : (@x,@y,@prompt,@click) ->
+		@x *= width
+		@y *= height
+		@r = 0.07 * height
+	draw : ->
+		fc()
+		sc 0
+		circle @x,@y,@r
+		fc 0
+		sc()
+		text @prompt,@x,@y
+	inside: (mx,my) -> dist(mx,my,@x,@y) < @r
 
 class Player
-	constructor : (@start, @row, @col, @keys) ->
-		@bg = if (@row+@col) % 2 == 0 then "#ff0" else "#f00"
-
-		@w = width * 0.25
-		@left = @w * @col 
-		@xmiddle = @left + @w / 2
-
-		@h = height * 0.25
-		@up = @h * @row
-		@ymiddle = @up + @h / 2
-
+	constructor : (@start, @target, @left, @right, @bg, @name) ->
 		@history = []
 		@tid = 0
+		@middle = (@left + @right) / 2
 		@startTid = new Date()
-
-		@index = 0
+		x = @middle 
+		@count = 0
+		buttons.push new Button x,0.51,KEYS[0], => @click 0
+		buttons.push new Button x,0.65,KEYS[1], => @click 1
+		buttons.push new Button x,0.79,KEYS[2], => @click 2
+		buttons.push new Button x,0.93,KEYS[3], => @click 3
 
 	draw : ->
-		if @start == target
-			fill "#0f0"
-			textSize 0.05*height
-			textAlign CENTER,CENTER
-			sc 0
-			rect @left,@up,@w,@h
-			fc 0
-			sc()
-			text @keys, @xmiddle, @ymiddle
-			text @tid,  @xmiddle, @ymiddle+0.25*@h
-		else
-			fill @bg
-			textSize 0.05*height
-			textAlign CENTER,CENTER
-			sc 0
-			rect @left,@up,@w,@h
-			fc 0
-			sc()
-			text @start,          @xmiddle, @ymiddle-0.25*@h
-			text @keys,           @xmiddle, @ymiddle
-			text CHOICES[@index], @xmiddle, @ymiddle+0.25*@h
+		if @start==@target then fill "#0f0" else fill @bg
+		textSize 0.05*height
+		textAlign CENTER,CENTER
+		rect @left * width,0,width * (@right-@left),height
+		fc 0
+		text @name,                   width * @middle, 0.1 * height
+		text @start,                  width * @middle, 0.2 * height
+		text level - @history.length, width * @middle, 0.3 * height
+		text @tid/1000,               width * @middle, 0.4 * height
 
 	operate : (newValue) ->
+		@count++
 		@history.push @start
 		@start = newValue
-		if @start == target then @stoppTid = new Date()
+		if @start == @target then @stoppTid = new Date()
 
-	click : (key) ->
-		if @start == target then return		
-		keys = _.clone @keys
-		key = key.toUpperCase()
-		if key == keys[0].toUpperCase() then @index = (@index + 1) % CHOICES.length
-		if key == keys[1].toUpperCase() 
-			if @index == 0 and @history.length > 0 then @start = @history.pop()
-			if @index == 1 then	@operate @start * MUL
-			if @index == 2 then	@operate @start + ADD
-			if @index == 3 and @start % DIV == 0 then @operate @start / DIV
-
-		if @start == target
+	click : (index) ->
+		if @start == @target then return
+		if index==0 and @history.length > 0 then @start = @history.pop()
+		if index==1 then	@operate @start + 2
+		if index==2 then	@operate @start * 2
+		if index==3 and @start % 2 == 0 then @operate @start / 2
+		if @start == @target
 			@stoppTid = new Date()
-			@tid = myRound (@stoppTid - @startTid)/1000 + COST * @history.length, 3
-
-myRound = (x,n) -> round(x*10**n)/10**n
+			@tid = @stoppTid - @startTid + 10000 * @count #history.length
 
 createTarget = (level, start) ->
-	op = (from,nr) ->
-		if nr not of comeFrom
-			b.push nr
-			comeFrom[nr] = from
+	op = (nr) -> if nr not in visited then b.push nr
 	a = [start]
-	comeFrom = {}
-	comeFrom[start] = 0
+	visited = [start]
 	for i in range level
 		b = []
 		for nr in a
-			op nr,nr + ADD 
-			op nr,nr * MUL
-			if nr % DIV == 0 then op nr,nr / DIV 
-		a = _.uniq b
-	target = a[myRandint 0,a.length]
-	result = []
-	while target != 0
-		result.unshift target
-		target = comeFrom[target]
-	console.log comeFrom
-	result
-
-newGame = (delta=0) ->
-	players = []
-	level += delta
-	if level < 1 then level = 1
-	startTid = new Date()
-	start = myRandint 1,MAX
-	solution = createTarget level, start
-	target = _.last solution
-	keys = 'QWERTYUIASDFGHJKZXCVBNM,'
-	if PLAYERS == 2 then keys = 'QWIO'
-	if PLAYERS == 3 then keys = 'QWTYOP'
-	for i in range PLAYERS
-		row = floor i / 4
-		col = i % 4
-		players.push new Player start,row,col, keys[2*i] + keys[2*i+1]
+			op nr + 2
+			op nr * 2
+			if nr % 2 == 0 then op nr / 2
+		b = _.uniq b
+		visited = visited.concat b
+		[a,b] = [b,a]
+	a[myRandint 0,a.length-1]
 
 setup = ->
 	createCanvas windowWidth,windowHeight
-	params = _.extend {ADD:2, MUL:2, DIV:2, MAX:20, COST:10, PLAYERS:12}, getParameters()
-	ADD = int params.ADD
-	MUL = int params.MUL
-	DIV = int params.DIV
-	MAX = int params.MAX
-	COST = int params.COST
-	PLAYERS = int params.PLAYERS
-	CHOICES = "undo *#{MUL} +#{ADD} /#{DIV}".split ' '
-	newGame()
+	newGame 1
 
 draw = ->
 	bg 1
-	player.draw() for player in players
+	for player in players
+		player.draw()
+	for button in buttons
+		button.draw()
 	sc()
-	text target, width * 0.5, 0.75*height + 0.33*players[0].h
-	text "level: #{level}", width * 0.5, 0.75*height + 0.67*players[0].h
-	text "seed: #{seed}", width * 0.25, 0.75*height + 0.67*players[0].h
+	fc 0
+	text players[0].target, 0.5 * width, 0.2 * height
+
+newGame = (delta) ->
+	level += delta
+	if level == 0 then level = 1
+	startTid = new Date()
+	start = myRandint 1,20
+	target = createTarget level, start
+	players = []
+	players.push new Player start,target,0.00,0.20, "#ff0", 'Alex'
+	players.push new Player start,target,0.20,0.40, "#f00", 'Lowe'
+	players.push new Player start,target,0.60,0.80, "#f0f", 'Mark'
+	players.push new Player start,target,0.80,1.00, "#0ff", 'Tim'
 
 keyPressed = -> 
-	if key == 'Enter' then console.log solution
-	else if key == "ArrowUp" then newGame 1
-	else if key == "ArrowDown" then newGame -1
-	else player.click key for player in players
+	if key == ' ' then newGame 0 
+	if key in 'uU' then newGame 1
+	if key in 'dD' then newGame -1
+
+mousePressed = ->
+	for button in buttons
+		if button.inside mouseX,mouseY then button.click()
